@@ -82,3 +82,32 @@ void vga_putchar(char c) {
 	
 	return;
 }
+
+/** Moves the VGA cursor
+ * @param y new row
+ * @param x new column
+ */
+void vga_move_cursor(size_t y, size_t x) {
+	uint16_t location;
+	
+	location = y * VGA_WIDTH + x;
+	
+	// Write low byte
+	outb(0x0F, 0x3D4);
+	outb(0xFF & location, 0x3D5);
+	
+	// Write high byte
+	outb(0x0E, 0x3D4);
+	outb(0xFF & (location >> 8), 0x3D5);
+	
+	return;
+}
+
+/** Updates the cursor position to reflect any changes in vga_row and
+ * vga_column. Useful after calling vga_putchar() which doesn't do this
+ * automatically.
+ */
+inline void vga_update_cursor() {
+	vga_move_cursor(vga_row, vga_column);
+	return;
+}

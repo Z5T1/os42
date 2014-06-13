@@ -2,9 +2,8 @@
 
 #include <stdint.h>
 
-#include "vga.h"
-
-void puts(char* s);
+#include <stdio.h>
+#include <vga.h>
 
 /* Entry point for the kernel */
 void kernel_main() {
@@ -15,17 +14,4 @@ void kernel_main() {
 	vga_init();
 	vga_set_color(fg, bg);
 	puts("Hello World!");
-	
-	for (i = 0; i < 255; i++) {
-		vga_current_color = i;
-		puts("Hello World!");
-	}
-}
-
-void puts(char* s) {
-	int i;
-	
-	for (i = 0; s[i] != 0; i++) {
-		vga_putchar(s[i]);
-	}
 }

@@ -12,6 +12,7 @@
 #include <stdint.h>
 
 #include <stdlib.h>
+#include <sys/io.h>
 
 /** Defines constants for VGA colors */
 typedef enum {
@@ -94,7 +95,20 @@ vga_color vga_get_fg();
  */
 vga_color vga_get_bg();
 
-/** Prints a character to the VGA screen
+/** Prints a character to the VGA screen. This does NOT update the
+ * cursor position, use vga_update_cursor() for that.
  * @param c character
  */
 void vga_putchar(char c);
+
+/** Moves the VGA cursor
+ * @param y new row
+ * @param x new column
+ */
+void vga_move_cursor(size_t y, size_t x);
+
+/** Updates the cursor position to reflect any changes in vga_row and
+ * vga_column. Useful after calling vga_putchar() which doesn't do this
+ * automatically.
+ */
+inline void vga_update_cursor();
