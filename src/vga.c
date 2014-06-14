@@ -12,6 +12,7 @@
  */
 void vga_init() {
 	// Initialize Variables
+	vga_tab_width = 4;
 	vga_buffer = (uint16_t*) 0xB8000;
 	vga_row = 0;
 	vga_column = 0;
@@ -64,22 +65,44 @@ vga_color vga_get_bg() {
  * @param c character
  */
 void vga_putchar(char c) {
-	uint16_t value = c | vga_current_color << 8;
-	vga_buffer[vga_row * VGA_WIDTH + vga_column] = value;
-	
-	if (vga_row == VGA_HEIGHT - 1 && vga_column == VGA_WIDTH - 1) {
-		memcpy(vga_buffer, vga_buffer + VGA_WIDTH, sizeof(uint16_t) * VGA_WIDTH * (VGA_HEIGHT - 1));
-		memset(vga_buffer + (VGA_WIDTH * (VGA_HEIGHT - 1)), 0, sizeof(uint16_t) * VGA_WIDTH);
-		vga_column = 0;
+
+	switch (c) {
+	case '\n':
+		if (vga_row == VGA_HEIGHT - 1) {
+			vga_scroll_down();
+		}
+		else {
+			vga_row++;
+			vga_column = 0;
+		}
+		break;
+	case '\t':
+		if (vga_tab_width - vga_column % vga_tab_width < VGA_WIDTH) {
+			vga_column += vga_tab_width - vga_column % vga_tab_width;
+		}
+		else if (vga_row == VGA_HEIGHT) {
+			vga_scroll_down();
+		}
+		else {
+			vga_row++;
+			vga_column = 0;
+		}
+		break;
+	default:
+		vga_buffer[vga_row * VGA_WIDTH + vga_column] = c | vga_current_color << 8;
+		
+		if (vga_row == VGA_HEIGHT - 1 && vga_column == VGA_WIDTH - 1) {
+			vga_scroll_down();
+		}
+		else if (vga_column == VGA_WIDTH - 1) {
+			vga_row++;
+			vga_column = 0;
+		}
+		else {
+			vga_column++;
+		}
 	}
-	else if (vga_column == VGA_WIDTH - 1) {
-		vga_row++;
-		vga_column = 0;
-	}
-	else {
-		vga_column++;
-	}
-	
+		
 	return;
 }
 
@@ -110,4 +133,15 @@ void vga_move_cursor(size_t y, size_t x) {
 inline void vga_update_cursor() {
 	vga_move_cursor(vga_row, vga_column);
 	return;
+}
+
+/** Scrolls the VGA display down one line */
+void vga_scroll_down() {
+	memcpy(vga_buffer, vga_buffer + VGA_WIDTH, sizeof(uint16_t) * VGA_WIDTH * (VGA_HEIGHT - 1));
+
+	for (vga_column = 0; vga_column < VGA_WIDTH; vga_column++) {
+		vga_buffer[vga_row * VGA_WIDTH + vga_column] = ' ' | vga_current_color << 8;
+	}
+	
+	vga_column = 0;
 }
